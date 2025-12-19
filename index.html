@@ -313,7 +313,7 @@
                 <button type="button" onclick="selectSymptom(this)" data-category="ハンドジェル">単色カラーorラメグラデーションオフ別途 (90分)</button>
                 <button type="button" onclick="selectSymptom(this)" data-category="ハンドジェル">マグネットジェルオフ別途 (90分)</button>
                 <button type="button" onclick="selectSymptom(this)" data-category="ハンドジェル">フレンチorグラデーション オフ別途 (90分)</button>
-                <button type="button" onclick="selectSymptom(this)" data-category="ハンドジェル">定額ベーシックジェル 単色シンプルアート2～4本 (120分)</button>
+                <button type="button" onclick="selectSymptom(this)" data-category="ハンドジェル">定額ベーシックジェル<br>単色シンプルアート2～4本 (120分)</button>
                 <button type="button" onclick="selectSymptom(this)" data-category="ハンドジェル">定額ジェル 単色シンプルアート4本～8本 (120分)</button>
                 <button type="button" onclick="selectSymptom(this)" data-category="ハンドジェル">定額ジェル アート6本グラデーションorフレンチ込み (120分)</button>
                 <button type="button" onclick="selectSymptom(this)" data-category="ハンドジェル">定額ジェル (120分)</button>
@@ -711,6 +711,18 @@
             updateDisplayInfo();
         }
 
+// ▼▼▼ 追加: 日時フォーマット変換用関数 ▼▼▼
+        function formatDateToJP(dateStr) {
+            if (!dateStr) return '';
+            // "YYYY-MM-DD HH:mm" の形式で入ってくる値を分解して整形
+            const parts = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})\s(\d{2}):(\d{2})$/);
+            if (parts) {
+                return `${parts[1]}年${parts[2]}月${parts[3]}日 ${parts[4]}時${parts[5]}分`;
+            }
+            return dateStr; // マッチしない場合はそのまま返す
+        }
+        // ▲▲▲ 追加ここまで ▲▲▲
+
         // --- 送信処理 ---
         function submitForm() {
             const name = document.getElementById('name').value.trim();
@@ -726,21 +738,21 @@
             if (!offStatus) return alert('オフの有無を選択してください。');
             if (!selectedSymptom || selectedSymptom.length === 0) return alert('メニューを選択してください。');
             if (!date1) return alert('第一希望日時を選択してください。');
-            // 第二希望は必須のまま（ご指示になかったため）。必要なら外します。
             if (!date2) return alert('第二希望日時を選択してください。');
-            // 第三希望の必須チェックは削除しました
 
-            const selectedSymptomText = selectedSymptom.map(item => `${item.name}`).join(',');
-            const irradiationsText = irradiationsCount || 'なし';
+            // メニューリストの整形
+            const selectedSymptomText = selectedSymptom.map(item => `・${item.name}`).join('\n');
+            const irradiationsText = irradiationsCount ? irradiationsCount : 'なし';
             
-            // 日時整形
-            const d1Text = date1;
-            const d2Text = date2;
-            const d3Text = date3 || 'なし';
+            // ▼▼▼ 修正: 日時を日本語形式に変換 ▼▼▼
+            const d1Text = formatDateToJP(date1);
+            const d2Text = formatDateToJP(date2);
+            const d3Text = date3 ? formatDateToJP(date3) : 'なし';
+            // ▲▲▲ 修正ここまで ▲▲▲
 
             liff.sendMessages([{
                 type: 'text',
-                text: `【予約フォーム】\nお名前：${name}\n電話番号：${phone}\nご来店回数：${visitCount}\nオフの有無：${offStatus}\nメニュー：${selectedSymptomText}\nオプション：${irradiationsText}\n\n第一希望：${d1Text}\n第二希望：${d2Text}\n第三希望：${d3Text}\n\nメッセージ：${message}`
+                text: `【ご予約内容】\n\n《お名前》${name}\n《電話番号》${phone}\n《ご来店回数》${visitCount}\n\n《オフの有無》${offStatus}\n\n《メニュー》\n${selectedSymptomText}\n\n《オプション》\n${irradiationsText}\n\n《第一希望》\n${d1Text}\n《第二希望》\n${d2Text}\n《第三希望》\n${d3Text}\n\n《メッセージ》${message}`
             }]).then(() => {
                 alert('予約内容を送信しました。');
                 liff.closeWindow();
@@ -751,5 +763,4 @@
         }
     </script>
 </body>
-
 </html>
